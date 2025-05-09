@@ -5,3 +5,6 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'price', 'description']
+    def create(self, validated_data):
+        user = Product.objects.create(**validated_data)
+        return user
