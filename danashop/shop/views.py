@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 from authentication.models import CustomUser
-from .models import Category, Product
-from .serializers import CategorySerializer, ProductFilterSerializer, ProductSerializer, ReviewSerializer
+from .models import Cart, CartItem, Category, DiscountCode, Product, ShippingAddress
+from .serializers import CartItemSerializer, CartSerializer, CategorySerializer, DiscountCodeSerializer, ProductFilterSerializer, ProductSerializer, ReviewSerializer, ShippingAddressSerializer
 from django.contrib.auth.models import User
 from rest_framework import generics
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -24,6 +24,73 @@ from rest_framework import status
 from django.db.models import Q
 from .models import Product
 from .serializers import ProductSerializer
+from rest_framework import serializers
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True, read_only=True)
+    total_price = serializers.SerializerMethodField()  # Total price before discount
+    discounted_price = serializers.SerializerMethodField()  # Total price after discount
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'items', 'total_price', 'discounted_price', 'created_at']
+
+    def get_total_price(self, obj):
+        # Calculate the total price of all items in the cart
+        return sum(item.product.price * item.quantity for item in obj.items.all())
+
+    def get_discounted_price(self, obj):
+        # Apply the discount if a valid discount code is provided
+        request = self.context.get('request')
+        discount_code = request.data.get('discount_code') if request else None
+
+        total_price = self.get_total_price(obj)
+        if discount_code:
+            try:
+                discount = DiscountCode.objects.get(code=discount_code)
+                if discount.is_valid():
+                    discount_amount = total_price * (discount.discount_percentage / 100)
+                    return total_price - discount_amount
+            except DiscountCode.DoesNotExist:
+                pass  # Invalid discount code
+        return total_price
+@method_decorator(name='post', decorator=discount_code_create)
+class DiscountCodeCreateView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        serializer = DiscountCodeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Discount code created successfully."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(name='post', decorator=discount_code_post)
+class DiscountCodeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        code = request.data.get('code')
+        try:
+            discount = DiscountCode.objects.get(code=code)
+            if discount.is_valid():
+                return Response({"message": "Discount code is valid.", "discount_percentage": discount.discount_percentage}, status=status.HTTP_200_OK)
+            return Response({"error": "Discount code is expired or inactive."}, status=status.HTTP_400_BAD_REQUEST)
+        except DiscountCode.DoesNotExist:
+            return Response({"error": "Invalid discount code."}, status=status.HTTP_404_NOT_FOUND)
+
+@method_decorator(name='post', decorator=discount_code_delete)
+
+class DiscountCodeDeleteView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            discount_code = DiscountCode.objects.get(pk=pk)
+            discount_code.delete()
+            return Response({"message": "Discount code deleted successfully."}, status=status.HTTP_200_OK)
+        except DiscountCode.DoesNotExist:
+            return Response({"error": "Discount code not found."}, status=status.HTTP_404_NOT_FOUND)
 @method_decorator(name='get', decorator=product_filter)
 class ProductFilterView(APIView):
     def get(self, request):
@@ -152,7 +219,62 @@ class ProductCreate(APIView):
             serializer.save()
             return Response({"message": "Product has been created successfully."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@method_decorator(name='get', decorator=shipping_address_get)
+
+class ShippingAddressListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Retrieve all shipping addresses for the authenticated user
+        addresses = ShippingAddress.objects.filter(user=request.user)
+        serializer = ShippingAddressSerializer(addresses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+@method_decorator(name='post', decorator=shipping_address_post)
     
+class ShippingAddressCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Create a new shipping address
+        serializer = ShippingAddressSerializer(data=request.data)
+        if serializer.is_valid():
+            # If `is_default` is True, unset other default addresses
+            if serializer.validated_data.get('is_default', False):
+                ShippingAddress.objects.filter(user=request.user, is_default=True).update(is_default=False)
+            serializer.save(user=request.user)
+            return Response({"message": "Shipping address added successfully."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@method_decorator(name='post', decorator=shipping_address_put)
+class ShippingAddressUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        # Update an existing shipping address
+        try:
+            address = ShippingAddress.objects.get(pk=pk, user=request.user)
+            serializer = ShippingAddressSerializer(address, data=request.data, partial=True)
+            if serializer.is_valid():
+                # If `is_default` is True, unset other default addresses
+                if serializer.validated_data.get('is_default', False):
+                    ShippingAddress.objects.filter(user=request.user, is_default=True).update(is_default=False)
+                serializer.save()
+                return Response({"message": "Shipping address updated successfully."}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ShippingAddress.DoesNotExist:
+            return Response({"error": "Shipping address not found."}, status=status.HTTP_404_NOT_FOUND)
+@method_decorator(name='post', decorator=shipping_address_delete)
+class ShippingAddressDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        # Delete a shipping address
+        try:
+            address = ShippingAddress.objects.get(pk=pk, user=request.user)
+            address.delete()
+            return Response({"message": "Shipping address deleted successfully."}, status=status.HTTP_200_OK)
+        except ShippingAddress.DoesNotExist:
+            return Response({"error": "Shipping address not found."}, status=status.HTTP_404_NOT_FOUND)
+        
 class ProductDetail(APIView):
     serializer_class = ProductSerializer
     def get(self, request, pk):
@@ -162,7 +284,53 @@ class ProductDetail(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
             return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+@method_decorator(name='get', decorator=cart_get)
+@method_decorator(name='post', decorator=cart_post)
+@method_decorator(name='delete', decorator=cart_delete)
 
+class CartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Retrieve the cart for the authenticated user
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        serializer = CartSerializer(cart, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        # Add or update a product in the cart
+        product_id = request.data.get('product_id')
+        quantity = request.data.get('quantity', 1)
+
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+
+        if not created:
+            cart_item.quantity += int(quantity)  # Update quantity if the item already exists
+        else:
+            cart_item.quantity = int(quantity)
+
+        cart_item.save()
+        return Response({"message": "Product added to cart successfully."}, status=status.HTTP_201_CREATED)
+
+    def delete(self, request):
+        # Remove a product from the cart
+        product_id = request.data.get('product_id')
+
+        try:
+            cart = Cart.objects.get(user=request.user)
+            cart_item = cart.items.get(product_id=product_id)
+            cart_item.delete()
+            return Response({"message": "Product removed from cart successfully."}, status=status.HTTP_200_OK)
+        except Cart.DoesNotExist:
+            return Response({"error": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
+        except CartItem.DoesNotExist:
+            return Response({"error": "Product not found in cart"}, status=status.HTTP_404_NOT_FOUND)
 @method_decorator(name='post', decorator=product_update)
 class ProductUpdate(APIView):
     serializer_class = ProductSerializer
