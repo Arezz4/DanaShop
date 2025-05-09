@@ -19,5 +19,12 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 #seller
 #pic
+    class Meta:
+        db_table = 'products'
+
     def __str__(self):
         return self.name
+    def save(self, *args, **kwargs):
+        if not Product.objects.exists() and not self.pk:
+            self.pk = 1000
+        super().save(*args, **kwargs)
