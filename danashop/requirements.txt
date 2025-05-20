@@ -1,0 +1,7 @@
+Django
+djangorestframework
+djangorestframework-simplejwt
+drf-yasg
+drf-extra-fields
+Pillow
+PyYAML
