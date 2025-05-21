@@ -32,15 +32,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     profile_picture = models.ImageField(upload_to='pfp/', null=True, blank=True)
     
     is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)  # Required for admin access
+    is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)   
     
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'email'  # Use email as the unique identifier
-    REQUIRED_FIELDS = ['username',"first_name","last_name","date_of_birth"]  # Add other required fields here
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username',"first_name","last_name","date_of_birth"] 
     class Meta:
-        db_table = 'users'  # Custom table name (change to whatever you want)
+        db_table = 'users' 
 
     def __str__(self):
         return self.username

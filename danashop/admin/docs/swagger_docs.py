@@ -1,41 +1,22 @@
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from ..serializers import *
+from danashop.serializers import *
 
 
-
-order_post = swagger_auto_schema(
-    operation_description="Convert the cart to order.",
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'first_name': openapi.Schema(type=openapi.TYPE_STRING, description="First name of the user.", example="Ali"),
-            'last_name': openapi.Schema(type=openapi.TYPE_STRING, description="Last name of the user.", example="Rezaei"),
-            'shipping_address': openapi.Schema(type=openapi.TYPE_STRING, description="Shipping address.", example="Tehran, Khiyaban 123"),
-            'phone_number': openapi.Schema(type=openapi.TYPE_STRING, description="Phone number.", example="+989123456789"),
-            'cart_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the cart to convert to order.", example=1),
-            
-        },
-        required=['product_id']
-    ),
-    responses={
-        201: openapi.Response(
-            description="Order was placed successfully.",
-            examples={
-                "application/json": {
-                    "message": "Order was placed successfully."
-                }
-            }
-        ),
-        400: openapi.Response(description="Invalid input."),
-        401: openapi.Response(description="Authentication required."),
-    }
+category_create = swagger_auto_schema(
+    request_body=CategorySerializer,
+    responses={201: CategorySerializer, 400: "Bad Request"}
 )
+category_update = swagger_auto_schema(
+    request_body=CategorySerializer,
+    responses={201: CategorySerializer, 400: "Bad Request"}
+)
+
+
 product_create = swagger_auto_schema(
     request_body=ProductSerializer,
     responses={201: ProductSerializer, 400: "Bad Request"}
 )
-
 product_update =swagger_auto_schema(
     request_body=ProductSerializer,
     responses={201: ProductSerializer, 400: "Bad Request"}
@@ -106,42 +87,6 @@ product_filter = swagger_auto_schema(
     }
 )
 
-product_review = swagger_auto_schema(
-    operation_description="Create/edit reviews for a specific product.",
-    manual_parameters=[
-        openapi.Parameter(
-            'product_id',
-            openapi.IN_PATH,
-            description="ID of the product for which reviews are being retrieved or created.",
-            type=openapi.TYPE_INTEGER,
-            required=True
-        )
-    ],
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'rating': openapi.Schema(type=openapi.TYPE_INTEGER, description="Rating out of 5", example=5),
-            'comment': openapi.Schema(type=openapi.TYPE_STRING, description="Review comment", example="Great product!"),
-        },
-        required=['rating', 'comment']
-    ),
-    responses={
-        201: openapi.Response(
-            description="Review created successfully.",
-            examples={
-                "application/json": {
-                    "id": 3,
-                    "user": "john_doe",
-                    "rating": 5,
-                    "comment": "Excellent product!",
-                    "created_at": "2023-05-03T12:00:00Z"
-                }
-            }
-        ),
-        400: openapi.Response(description="Bad Request"),
-        404: openapi.Response(description="Product not found"),
-    }
-)
 cart_get = swagger_auto_schema(
     operation_description="Retrieve the cart for the authenticated user.",
     responses={
@@ -193,18 +138,18 @@ cart_post = swagger_auto_schema(
     }
 )
 
-cart_update = swagger_auto_schema(
-    operation_description="Update a product's quantity.",
+cart_delete = swagger_auto_schema(
+    operation_description="Remove a product from the cart.",
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
-            'new_quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description="New quantity."),
+            'product_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the product to remove."),
         },
-        required=['new_quantity']
+        required=['product_id']
     ),
     responses={
         200: openapi.Response(
-            description="Cart was updated successfully.",
+            description="Product removed from cart successfully.",
             examples={
                 "application/json": {
                     "message": "Product removed from cart successfully."
@@ -212,6 +157,31 @@ cart_update = swagger_auto_schema(
             }
         ),
         404: openapi.Response(description="Product not found in cart or cart not found."),
+        401: openapi.Response(description="Authentication required."),
+    }
+)
+
+
+order_update = swagger_auto_schema(
+    operation_description="Update the status of an order.",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'status': openapi.Schema(type=openapi.TYPE_STRING, description="The new status."),
+        },
+        required=['status']
+    ),
+    responses={
+        201: openapi.Response(
+            description="Order was updated successfully.",
+            examples={
+                "application/json": {
+                    "message": "Order was updated successfully."
+                }
+            }
+        ),
+        400: openapi.Response(description="Invalid input."),
+        404: openapi.Response(description="Order not found."),
         401: openapi.Response(description="Authentication required."),
     }
 )

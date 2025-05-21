@@ -7,27 +7,6 @@ from django.db.models import Q
 from .models import Product
 from drf_extra_fields.fields import Base64ImageField 
 
-class ProductFilterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'name', 'description', 'price', 'category', 'in_stock', 'created_at', 'image', 'specifications']
-
-class CartItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.ReadOnlyField(source='product.name')
-    product_price = serializers.ReadOnlyField(source='product.price')
-    price_per_item = serializers.SerializerMethodField() 
-    total_price = serializers.SerializerMethodField() 
-
-    class Meta:
-        model = CartItem
-        fields = ['id', 'product', 'product_name', 'product_price', 'quantity', 'price_per_item', 'total_price']
-
-    def get_price_per_item(self, obj):
-        return obj.product.price
-
-    def get_total_price(self, obj):
-        return obj.product.price * obj.quantity
-    
 class ProductSerializer(serializers.ModelSerializer):
     image = Base64ImageField(required=False) 
     category = serializers.PrimaryKeyRelatedField(
@@ -41,7 +20,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'category', 'in_stock', 'created_at', 'image', 'specifications', 'average_rating']
+        fields = ['id', 'name', 'description', 'price', 'category', 'in_stock', 'created_at', 'image', 'specifications',  'average_rating']
 
     def validate_name(self, value):
         if not value:
@@ -68,6 +47,8 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f"Image size cannot exceed {max_size_mb} MB.")
         return value
 
+
+
 class CategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
 
@@ -78,4 +59,31 @@ class CategorySerializer(serializers.ModelSerializer):
     def get_subcategories(self, obj):
         subcategories = obj.subcategories.all()
         return CategorySerializer(subcategories, many=True).data
-    
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['id', 'first_name', 'last_name', 'shipping_address', 'phone_number', 'cart', 'order_date', 'status']
+        read_only_fields = ['id', 'order_date', 'status']
+
+    def validate(self, data):
+        if not data.get('first_name'):
+            raise serializers.ValidationError("First name is required.")
+        if not data.get('last_name'):
+            raise serializers.ValidationError("Last name is required.")
+        if not data.get('shipping_address'):
+            raise serializers.ValidationError("Shipping address is required.")
+        if not data.get('phone_number'):
+            raise serializers.ValidationError("Phone number is required.")
+        return data
+    def validate_phone_number(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError("Phone number must contain only digits.")
+        if len(value) < 10 or len(value) > 15:
+            raise serializers.ValidationError("Phone number must be between 10 and 15 digits long.")
+        return value
+    def create(self, validated_data):
+        cart = validated_data.pop('cart')
+        order = Order.objects.create(cart=cart, **validated_data)
+        return order
+        

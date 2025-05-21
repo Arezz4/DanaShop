@@ -6,7 +6,7 @@ from .models import CustomUser
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from drf_extra_fields.fields import Base64ImageField  # Install this package if not already installed
+from drf_extra_fields.fields import Base64ImageField 
 
 class UpdatePasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField(write_only=True, required=True)
@@ -20,7 +20,7 @@ class UpdatePasswordSerializer(serializers.Serializer):
 
     def validate_new_password(self, value):
         try:
-            validate_password(value)  # Use Django's built-in password validators
+            validate_password(value) 
         except ValidationError as e:
             raise serializers.ValidationError(e.messages)
         return value
@@ -32,39 +32,35 @@ class UpdatePasswordSerializer(serializers.Serializer):
         return user
 
 class RegisterSerializer(serializers.ModelSerializer):
-    profile_picture = Base64ImageField(required=False)  # Use Base64ImageField for profile pictures
+    profile_picture = Base64ImageField(required=False)  
 
     class Meta:
         model = CustomUser
         fields = ['email', 'first_name', 'last_name', 'profile_picture', 'is_staff', 'date_of_birth', 'username', 'password']
         extra_kwargs = {
             'password': {'write_only': True},
-            'is_staff': {'read_only': True},  # Default: Prevent regular users from setting this
-            'email': {'validators': []},  # Disable the default UniqueValidator for email
-            'username': {'validators': []},  # Disable the default UniqueValidator for email
+            'is_staff': {'read_only': True},  
+            'email': {'validators': []},  
+            'username': {'validators': []}, 
         }
     def validate_email(self, value):
-        # Check if a user with this email already exists
         if CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError("A user with this email already exists. Please use a different email.")
         return value
     def validate_username(self, value):
-        # Check if a user with this email already exists
         return value
 
     def validate(self, attrs):
-        # Check if 'is_staff' is being set
         if 'is_staff' in self.initial_data:
             request = self.context.get('request')
-            if not request or not request.user.is_superuser:  # Only superusers can set 'is_staff'
+            if not request or not request.user.is_superuser: 
                 raise serializers.ValidationError({
                     'is_staff': "You do not have permission to set this field."
                 })
-            attrs['is_staff'] = self.initial_data['is_staff']  # Allow superusers to set it
+            attrs['is_staff'] = self.initial_data['is_staff']  
         return attrs
 
     def validate_username(self, value):
-        # Check if the username starts with a number
         if re.match(r'^\d', value):
             raise serializers.ValidationError("Username cannot start with a number.")
         if CustomUser.objects.filter(username=value).exists():
@@ -73,9 +69,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def validate_profile_picture(self, value):
-        # Check the size of the profile picture (max size: 5 MB)
         max_size_mb = 5
-        max_size_bytes = max_size_mb * 1024 * 1024  # Convert MB to bytes
+        max_size_bytes = max_size_mb * 1024 * 1024 
         if value.size > max_size_bytes:
             raise serializers.ValidationError(f"Profile picture size cannot exceed {max_size_mb} MB.")
         return value
@@ -90,7 +85,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 last_name=validated_data.get('last_name', ''),
                 date_of_birth=validated_data.get('date_of_birth', None),
                 profile_picture=validated_data.get('profile_picture', None),
-                is_staff=validated_data.get('is_staff', False),  # Default to False if not provided
+                is_staff=validated_data.get('is_staff', False), 
             )
             return user
         except ValidationError as e:

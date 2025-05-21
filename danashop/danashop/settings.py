@@ -76,8 +76,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'danashop.wsgi.application'
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Set the desired duration (e.g., 1 hour)
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Optional: Adjust refresh token lifetime
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1), 
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7), 
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
@@ -98,7 +98,7 @@ SWAGGER_SETTINGS = {
             'description': "JWT token with `Bearer <your token>`",
         }
     },
-    'USE_SESSION_AUTH': False,  # hide login/password fields
+    'USE_SESSION_AUTH': False,  
 }
 
 # Database
@@ -111,7 +111,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = 'authentication.CustomUser'  # Replace 'yourapp' with the name of your app
+AUTH_USER_MODEL = 'authentication.CustomUser' 
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -123,7 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 8,  # Minimum password length
+            'min_length': 8,  
         },
 
     },

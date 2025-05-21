@@ -24,11 +24,11 @@ from .docs.swagger_docs import *
 
 @method_decorator(name='post', decorator=update_profile)
 class UpdateProfileView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    permission_classes = [IsAuthenticated]  
     
     def post(self, request):
-        user = request.user  # Get the currently authenticated user
-        serializer = UpdateProfileSerializer(user, data=request.data, partial=True)  # Allow partial updates
+        user = request.user 
+        serializer = UpdateProfileSerializer(user, data=request.data, partial=True) 
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "Profile updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
@@ -36,9 +36,9 @@ class UpdateProfileView(APIView):
 @method_decorator(name='post', decorator=update_password)
 
 class UpdatePasswordView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    permission_classes = [IsAuthenticated] 
     def post(self, request):
-        user = request.user  # Get the currently authenticated user
+        user = request.user 
         current_password = request.data.get('current_password')
         new_password = request.data.get('new_password')
         if not user.check_password(current_password):
@@ -56,27 +56,25 @@ class RegisterView(generics.CreateAPIView):
     def perform_create(self, serializer):
         
         user = serializer.save()
-        # permission = Permission.objects.get(codename='add_product')
-        # user.user_permissions.add(permission)
-        # user.save()
+
     
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        # Authenticate the user manually
+
         email = request.data.get('email')
         password = request.data.get('password')
         
+        if CustomUser.objects.filter(email=email).first().is_staff and request.get_full_path() != "/api/admin/login/" :
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
         user = authenticate(request, username=email, password=password)
         
         if user is not None:
-            # Update the last_login field
-            user.last_login = timezone.now()  # Set the current time as last_login
-            user.save()  # Save the user instance to update the last_login field
+            user.last_login = timezone.now() 
+            user.save() 
 
-            # Call the parent class's post method to perform the actual login and token generation
             response = super().post(request, *args, **kwargs)
             return response
         else:
-            # If authentication failed, return an error response
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
