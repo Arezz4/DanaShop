@@ -161,7 +161,6 @@ cart_delete = swagger_auto_schema(
     }
 )
 
-
 order_update = swagger_auto_schema(
     operation_description="Update the status of an order.",
     request_body=openapi.Schema(

@@ -106,42 +106,6 @@ product_filter = swagger_auto_schema(
     }
 )
 
-product_review = swagger_auto_schema(
-    operation_description="Create/edit reviews for a specific product.",
-    manual_parameters=[
-        openapi.Parameter(
-            'product_id',
-            openapi.IN_PATH,
-            description="ID of the product for which reviews are being retrieved or created.",
-            type=openapi.TYPE_INTEGER,
-            required=True
-        )
-    ],
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'rating': openapi.Schema(type=openapi.TYPE_INTEGER, description="Rating out of 5", example=5),
-            'comment': openapi.Schema(type=openapi.TYPE_STRING, description="Review comment", example="Great product!"),
-        },
-        required=['rating', 'comment']
-    ),
-    responses={
-        201: openapi.Response(
-            description="Review created successfully.",
-            examples={
-                "application/json": {
-                    "id": 3,
-                    "user": "john_doe",
-                    "rating": 5,
-                    "comment": "Excellent product!",
-                    "created_at": "2023-05-03T12:00:00Z"
-                }
-            }
-        ),
-        400: openapi.Response(description="Bad Request"),
-        404: openapi.Response(description="Product not found"),
-    }
-)
 cart_get = swagger_auto_schema(
     operation_description="Retrieve the cart for the authenticated user.",
     responses={

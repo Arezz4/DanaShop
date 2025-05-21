@@ -1,4 +1,3 @@
-from logging import log
 import re
 from django.forms import ValidationError
 from rest_framework import serializers
@@ -43,10 +42,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             'email': {'validators': []},  
             'username': {'validators': []}, 
         }
+        
     def validate_email(self, value):
         if CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError("A user with this email already exists. Please use a different email.")
         return value
+    
     def validate_username(self, value):
         return value
 

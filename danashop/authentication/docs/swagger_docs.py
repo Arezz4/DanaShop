@@ -25,6 +25,7 @@ register_user = swagger_auto_schema(
         400: openapi.Response('Bad Request'),
     }
 )
+
 update_profile = swagger_auto_schema(
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -40,26 +41,27 @@ update_profile = swagger_auto_schema(
         400: openapi.Response('Bad Request'),
     }
 )
+
 update_password  = swagger_auto_schema(
-        operation_description="Update the user's password",
-        request_body=UpdatePasswordSerializer,
-        responses={
-            200: openapi.Response(
-                description="Password updated successfully",
-                examples={
-                    "application/json": {
-                        "message": "Password updated successfully"
-                    }
+    operation_description="Update the user's password",
+    request_body=UpdatePasswordSerializer,
+    responses={
+        200: openapi.Response(
+            description="Password updated successfully",
+            examples={
+                "application/json": {
+                    "message": "Password updated successfully"
                 }
-            ),
-            400: openapi.Response(
-                description="Bad Request",
-                examples={
-                    "application/json": {
-                        "current_password": ["Current password is incorrect."],
-                        "new_password": ["This password is too short. It must contain at least 8 characters."]
-                    }
+            }
+        ),
+        400: openapi.Response(
+            description="Bad Request",
+            examples={
+                "application/json": {
+                    "current_password": ["Current password is incorrect."],
+                    "new_password": ["This password is too short. It must contain at least 8 characters."]
                 }
-            ),
-        }
-    )
+            }
+        ),
+    }
+)

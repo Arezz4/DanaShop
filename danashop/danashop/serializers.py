@@ -1,9 +1,5 @@
 from rest_framework import serializers
 from .models import *
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.db.models import Q
 from .models import Product
 from drf_extra_fields.fields import Base64ImageField 
 
@@ -16,11 +12,10 @@ class ProductSerializer(serializers.ModelSerializer):
             "incorrect_type": "Category ID must be an integer.",
         }
     )
-    average_rating = serializers.SerializerMethodField()  
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'category', 'in_stock', 'created_at', 'image', 'specifications',  'average_rating']
+        fields = ['id', 'name', 'description', 'price', 'category', 'in_stock', 'created_at', 'image', 'specifications']
 
     def validate_name(self, value):
         if not value:

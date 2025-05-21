@@ -2,23 +2,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import CustomUser
-from .serializers import  RegisterSerializer, UpdateProfileSerializer
-from django.contrib.auth.models import User
+from .serializers import  *
 from rest_framework import generics
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.utils import timezone
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User, Permission
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 from .serializers import RegisterSerializer
 from .models import CustomUser
-from drf_yasg import openapi
-from drf_yasg import openapi
 from django.utils.decorators import method_decorator
 from .docs.swagger_docs import *
 
@@ -33,10 +25,11 @@ class UpdateProfileView(APIView):
             serializer.save()
             return Response({"message": "Profile updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 @method_decorator(name='post', decorator=update_password)
-
 class UpdatePasswordView(APIView):
     permission_classes = [IsAuthenticated] 
+    
     def post(self, request):
         user = request.user 
         current_password = request.data.get('current_password')
@@ -48,14 +41,14 @@ class UpdatePasswordView(APIView):
         user.set_password(new_password)
         user.save()
         return Response({"message": "Password updated successfully"}, status=status.HTTP_200_OK)
+    
 @method_decorator(name='post', decorator=register_user)
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = RegisterSerializer
 
     def perform_create(self, serializer):
-        
-        user = serializer.save()
+        serializer.save()
 
     
 

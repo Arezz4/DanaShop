@@ -1,8 +1,5 @@
 
 from django.db import models
-from django.db.models import Avg
-from django.utils.timezone import now
-
 from authentication.models import CustomUser
 
 class Category(models.Model):
@@ -35,7 +32,6 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-
 class Cart(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='cart')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -50,7 +46,6 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} in {self.cart.user.username}'s cart"
-
 
 class Order(models.Model):
     first_name = models.CharField(max_length=100)
