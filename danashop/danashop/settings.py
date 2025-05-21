@@ -58,11 +58,6 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:5173',
-    'https://localhost:5173',
-    # other origins...
-]
 
 ROOT_URLCONF = 'danashop.urls'
 
