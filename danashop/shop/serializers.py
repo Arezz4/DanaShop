@@ -1,10 +1,5 @@
 from rest_framework import serializers
-from .models import *
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.db.models import Q
-from .models import Product
+from danashop.models import *
 from drf_extra_fields.fields import Base64ImageField 
 
 class ProductFilterSerializer(serializers.ModelSerializer):

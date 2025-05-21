@@ -1,28 +1,15 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-from authentication.models import CustomUser
-from .models import *
+from danashop.models import *
 from .serializers import *
-from django.contrib.auth.models import User
-from rest_framework import generics
-from rest_framework_simplejwt.views import TokenObtainPairView
 from django.utils import timezone
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
-from rest_framework.permissions import IsAdminUser
-from drf_yasg import openapi
 from django.utils.decorators import method_decorator
 from .docs.swagger_docs import *
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.db.models import Q
-from .models import Product
+from danashop.models import *
 from .serializers import ProductSerializer
 from rest_framework import serializers
 
@@ -141,6 +128,7 @@ class CartView(APIView):
 @method_decorator(name='put', decorator=cart_update)
 class CartModifyView(APIView):
     permission_classes = [IsAuthenticated]
+    
     def delete(self, request, pk):
         try:
             cart = Cart.objects.get(user=request.user)
@@ -151,6 +139,7 @@ class CartModifyView(APIView):
             return Response({"error": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
         except CartItem.DoesNotExist:
             return Response({"error": "Product not found in cart"}, status=status.HTTP_404_NOT_FOUND)
+        
     def put(self, request, pk):
         try:
             cart = Cart.objects.get(user=request.user)

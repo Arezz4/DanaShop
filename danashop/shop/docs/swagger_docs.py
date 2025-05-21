@@ -2,8 +2,6 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from ..serializers import *
 
-
-
 order_post = swagger_auto_schema(
     operation_description="Convert the cart to order.",
     request_body=openapi.Schema(
@@ -31,6 +29,7 @@ order_post = swagger_auto_schema(
         401: openapi.Response(description="Authentication required."),
     }
 )
+
 product_create = swagger_auto_schema(
     request_body=ProductSerializer,
     responses={201: ProductSerializer, 400: "Bad Request"}
@@ -40,6 +39,7 @@ product_update =swagger_auto_schema(
     request_body=ProductSerializer,
     responses={201: ProductSerializer, 400: "Bad Request"}
 )
+
 product_filter = swagger_auto_schema(
     operation_description="Filter products by category, price range, name, and stock availability.",
     manual_parameters=[
